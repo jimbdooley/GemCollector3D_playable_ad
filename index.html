@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script type="text/javascript" src="https://tpc.googlesyndication.com/pagead/gadgets/html5/api/exitapi.js"> </script>
+    <script type="text/javascript">
+        function resize_canvas(){
+            console.log("resizing")
+            let _canvas = document.getElementById("canvas");
+            setCanvasWH()
+            swapSS_real(window.innerWidth, window.innerHeight)
+        }
+    </script>
+    <title>GemCollectorWeb2</title>
+    <meta name="ad.orientation" content="portrait,landscape">
+    <style>
+        html,body {margin: 0; height: 100%; overflow: hidden} 
+        #container {
+        background-color: #fff;
+        border-radius: 5px;
+        padding: 20px;
+        align-items: center;
+        overflow-y: scroll;
+        /*
+        
+        display: flex;
+        flex-direction: column;
+        */
+        }
+
+        #close-btn {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        border: 3px solid black;
+        cursor: pointer;
+        display: inline-block;
+        padding: 4px 16px;
+        border-radius: 8px;
+        background-color: #ff4d4d;
+        font-weight: bold;
+        text-transform: uppercase;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        #check-btn {
+        position: absolute;
+        right: 15px;
+        bottom: 15-x;
+        padding: 4px 24px;
+        background-color: #0077cc;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        font-size: 40px;
+        cursor: pointer;
+        }
+
+        #menuTitle {
+        margin-top: 0;
+        }
+
+        .button {
+        }
+
+        .close {
+        display: inline-block;
+        font-size: 40px;
+        color: #000;
+        }
+
+        #check-btn:hover {
+        background-color: #005ca3;
+        }
+
+        input[type="radio"] {
+        transform: scale(1.6); /* increase the radio button size */
+        margin-right: 10px;
+        margin-bottom: 15px;
+        }
+        label {
+        margin-bottom: 15px;
+        align-items: center;
+        font-size: 1.6em; /* increase the font size */
+        }
+    </style>
+</head>
+<body onresize="resize_canvas()">
+    <canvas id="canvas" height=510 width=340 style="border:0px solid black;"></canvas>
+    <!--
+        <div id="menu" style="display: none;width:100pct;">
+        <div id="backDiv">
+
+        </div>
+        <h3 id="menuTitle"></h3>
+        <input type="radio" id="radio0" value="vt0" checked="true" onchange="radio(0)">
+        <label id="label0" for="vt0" onclick="radio(0)">Standard</label>
+        <br>
+        <input type="radio" id="radio1" value="vt1" onchange="radio(1)">
+        <label id="label1" for="vt1" onclick="radio(1)">Standard</label>
+        <br>
+        <input type="radio" id="radio2" value="vt2" onchange="radio(2)">
+        <label id="label2" for="vt2" onclick="radio(2)">Standard</label>
+        <br>
+        <input type="radio" id="radio3" value="vt3" onchange="radio(3)">
+        <label id="label3" for="vt3" onclick="radio(3)">Standard</label>
+        <br>
+        <input type="radio" id="radio4" value="vt4" onchange="radio(4)">
+        <label id="label4" for="vt4" onclick="radio(4)">Standard</label>
+        <br>
+    </div>
+-->
+    <div id="container" class="container">
+        <div id="close-btn" onclick="backToGame()" class="button">
+            <span class="close">&times;</span>
+          </div>
+        <div id="menu1">
+            <h2 id="menuTitle">Title Here</h2>
+            <canvas id="colorQuads" height=110 width=110 style="border:3px solid black;"></canvas>
+            <br>
+        </div>
+        <div id="menu2">
+            <input type="radio" id="radio0" name="radio-group" onchange="radio(0)">
+            <label id="label0" for="radio0" onclick="radio(0)">Radio Button 1</label>
+            <br>
+            <input type="radio" id="radio1" name="radio-group" onchange="radio(1)">
+            <label id="label1" for="radio1" onclick="radio(1)">Radio Button 2</label>
+            <br>
+            <input type="radio" id="radio2" name="radio-group" onchange="radio(2)">
+            <label id="label2" for="radio2" onclick="radio(2)">Radio Button 3</label>
+            <br>
+            <input type="radio" id="radio3" name="radio-group" onchange="radio(3)">
+            <label id="label3" for="radio3" onclick="radio(3)">Radio Button 4</label>
+            <br>
+            <input type="radio" id="radio4" name="radio-group" onchange="radio(4)">
+            <label id="label4" for="radio4" onclick="radio(4)">Radio Button 5</label>
+            <button id="check-btn" onclick="backToGame()">&check;</button>
+        </div>
+      </div>
+      
+</body>
+<script>
+document.getElementById("container").style.display = "none"
+const JUMPING_INTRO = false
+const SHORT_LEVELS = true
+const CUSTOM_LEVELS = true
+const JUST_ONE = false
+const SHOW_SCENE = true
+const assets = {}
+const drawable = {}
+const drawableArrs = {}
+const canvas = document.getElementById("canvas");
+const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+const img_generating_canvas = document.createElement("canvas")
+const img_generating_ctx = img_generating_canvas.getContext("2d")
+const PI = Math.PI
+const Random = {
+    nextInt(start, stop) {
+        return Math.floor(start + (stop-start) * Math.random())
+    },
+}
+const Color = {
+    argb(a, r, g, b) {
+        return [a, r, g, b]
+    }
+}
+const Bitmap = {
+    createBitmap(argbArr, rows, cols) {
+        const pixels = new Uint8ClampedArray(rows*cols*4)
+        for (let i = 0; i < rows; i++) {
+            for (let j = 0; j < cols; j++) {
+                pixels[4*(cols*i + j) + 0] = argbArr[i*cols + j][1]
+                pixels[4*(cols*i + j) + 1] = argbArr[i*cols + j][2]
+                pixels[4*(cols*i + j) + 2] = argbArr[i*cols + j][3]
+                pixels[4*(cols*i + j) + 3] = argbArr[i*cols + j][0]
+            }
+        }
+        return new ImageData(pixels, rows, cols)
+    },
+    Config: {ARGB: -1},
+}
+</script>
+<script src="StrFile.js"></script>
+<script src="Images.js"></script>
+<script src="Assets.js"></script>
+<script src="menu.js"></script>
+<script src="comm.js"></script>
+<script src="MathFuncs.js"></script>
+<script src="DisplayObject.js"></script>
+<script src="Constants.js"></script>
+<script src="Loaders.js"></script>
+<script src="GeometryArrayMakers.js"></script>
+<script src="OpenGLHelpers.js"></script>
+<script src="BitmapFromTextname.js"></script>
+<script src="Textname.js"></script>
+
+
+<script src="GemInfo.js"></script>
+<script src="Data.js"></script>
+
+<script src="MapM.js"></script>
+<script src="SetPositions.js"></script>
+<script src="MapHex.js"></script>
+<script src="MapSquare.js"></script>
+<script src="LevelGetAll.js"></script>
+<script src="GameState.js"></script>
+<script src="Level_draw.js"></script>
+<script src="Level.js"></script>
+<script src="Settings.js"></script>
+<script src="animateScores.js"></script>
+
+
+<script src="DrawerVanilla.js"></script>
+<script src="DrawerGear.js"></script>
+<script src="DrawerRowCheck.js"></script>
+<script src="DrawerIndicator.js"></script>
+<script src="DrawerText.js"></script>
+<script src="DrawerButton.js"></script>
+<script src="DrawerScene.js"></script>
+<script src="DrawerIntro.js"></script>
+<script src="DrawerGem.js"></script>
+<script src="DrawerScore.js"></script>
+<script src="Card.js"></script>
+<script src="CardGem.js"></script>
+
+<script src="World.js"></script>
+<script src="WorldMath.js"></script>
+<script src="WorldSetRegion.js"></script>
+
+<script src="Finger.js"></script>
+<script src="MyGLRenderer.js"></script>
+<script src="Mouse.js"></script>
+<script src="main.js"></script>
+</html> 
